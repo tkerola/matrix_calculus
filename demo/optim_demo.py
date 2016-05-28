@@ -3,7 +3,7 @@ Optimization demo.
 """
 
 """
-Support we have matrices Y,D and want to solve
+Suppose we have matrices Y,D and want to solve
     argmin_X 0.5 || Y - DX ||_2^2         (1)
 for X but don't know how.
 """
