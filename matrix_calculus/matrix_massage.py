@@ -9,7 +9,9 @@ import functools
 from matrix_expr import *
 from matrix_expr_match import match_deepest, translate_case
 
-def massage2canonical(expr):
+CANONICAL_VERBOSE = True
+
+def massage2canonical(expr,verbose=True):
   """
   Massages the given expression
   to canonical form with the dX
@@ -21,6 +23,8 @@ def massage2canonical(expr):
   For each non-canonical expression, expand only the branch that contains a dX.
   For each canonical expression, combine it with other canonical expressions.
   """
+  global CANONICAL_VERBOSE
+  CANONICAL_VERBOSE = verbose
 
   d = lambda e: DifferentialExpr(e,X)
 
@@ -72,8 +76,9 @@ def massage2canonical_stage1(expr,cases,levels):
     #print_structure(expr)
     new_expr_copy = copy.deepcopy(expr)
     #print "Matches:,matches
-    print "[{}] Applying {} -> {}".format(".".join(map(str,levels)),best_case,cases[best_case])
-    print "[{}] :: {} -> {}".format(".".join(map(str,levels)),prev_expr,new_expr_copy)
+    if CANONICAL_VERBOSE:
+        print "[{}] Applying {} -> {}".format(".".join(map(str,levels)),best_case,cases[best_case])
+        print "[{}] :: {} -> {}".format(".".join(map(str,levels)),prev_expr,new_expr_copy)
 
     expr.children = [massage2canonical_stage1(child,cases,levels+[1]) for child_index,child in enumerate(expr.children)]
     levels[-1] += 1

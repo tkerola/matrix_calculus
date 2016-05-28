@@ -1,7 +1,7 @@
 
 from matrix_calculus import *
-from matrix_massage import massage2canonical
-from show_latex import show_latex
+from matrix_calculus.matrix_massage import massage2canonical
+from matrix_calculus.show_latex import show_latex
 
 def main():
     A = Variable("A")

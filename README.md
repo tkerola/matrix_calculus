@@ -7,7 +7,7 @@ Usage
 =====
 ```
 from matrix_calculus import *
-from matrix_massage import massage2canonical
+from matrix_calculus.matrix_massage import massage2canonical
 A = Variable("A")
 B = Variable("B")
 X = Variable("X")
@@ -20,7 +20,8 @@ dX = massage2canonical(dX)
 print dX # Canonical form
 ```
 
-The canonical form can consequently be directly used in an optimization library such as [CVXPY](http://www.cvxpy.org/en/latest/).
+The canonical form can consequently be directly used with an
+optimization method such as L-BFGS.
 
 See also `test.py`.
 
