@@ -42,12 +42,22 @@ print dX
 # We can solve this using L-BFGS
 from scipy.optimize import fmin_l_bfgs_b
 X0=np.random.random((p,n))
-def f(x):
+def f_true(x):
     X = x.reshape((p,n))
     return 0.5*np.sum((Y-D.dot(X))**2)
-def fp(x):
+def fp_true(x):
     X = x.reshape((p,n))
     return 0.5*((D.T.dot(Y-D.dot(X))).T+(Y-D.dot(X)).T.dot(D)).ravel()
+from matrix_calculus.func import expr2func
+const_dict = {'Y':Y,'D':D}
+f = expr2func(expr,wrt,const_dict,wrt_shape=(p,n))
+#fp = lambda x: expr2func(dX,wrt,const_dict,wrt_shape=(p,n))(x).T.ravel()
+def fp(x):
+    X = x.reshape((p,n))
+    return dX.eval(X,wrt,const_dict,is_grad=True).ravel()
+print np.linalg.norm(f(X0) - f_true(X0))
+print np.linalg.norm(fp(X0) - fp_true(X0))
+
 x,min_val,d = fmin_l_bfgs_b(f,X0,fp)
 X = x.reshape((p,n))
 for k in ['warnflag','funcalls','nit','grad']:
