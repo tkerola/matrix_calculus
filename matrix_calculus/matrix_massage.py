@@ -33,6 +33,7 @@ def massage2canonical(expr,verbose=True):
   B = Variable("B")
   C = Variable("C")
   s = ScalarVariable("s")
+  u = ScalarVariable("u")
   # In all cases, d(X) represents an expression that contains
   # a differential, and is only used for matching.
   # The right-hand side of each case does not contain this differential.
@@ -43,6 +44,7 @@ def massage2canonical(expr,verbose=True):
     Tr(A*d(B).T) : Tr(A.T*B),
     Tr(A*d(C)) + Tr(B*d(C)): Tr((A+B)*C),
     (A*B.T).T + B*A.T: 2*(B*A.T),
+    (A.T*B).T + B.T*A: 2*(B.T*A),
     d(A*B).T : B.T*A.T,
     X*(A*X).T + (A*X*X.T).T: 2*(X*X.T*A.T),
     d(A+B)*C : A*C + B*C,
@@ -50,7 +52,8 @@ def massage2canonical(expr,verbose=True):
     d(A-B)*C : A*C - B*C,
     A*d(B-C) : A*B - A*C,
     Tr(A*d(B*C)) : Tr((A*B)*C), # For changing associativity so that B (or C) can eventually move to the right side (use the Tr rule above)
-    #Tr(s*A) : s*Tr(A),
+    s*u*Tr(A) : s*Tr(u*A),
+    #s*Tr(A) : s*Tr(A),
     #(s*A)*B: s*(A*B),
     #Tr(A) + Tr(B): Tr(A+B),
     #Tr(A) - Tr(B): Tr(A-B),
@@ -159,46 +162,46 @@ def massage2canonical_stage1(expr,cases,levels):
 
   return expr
 
-def massage2canonical_stage2(expr):
-  expr = copy.deepcopy(expr)
-  prev_expr = copy.deepcopy(expr)
-
-  if isinstance(expr, AddExpr):
-    left, right = expr.children[0], expr.children[1]
-    if isinstance(left,TraceExpr) and isinstance(right,TraceExpr):
-      # Tr(A) + Tr(B)
-      A,B = left.children[0], right.children[0]
-      if is_canonical(A) and is_canonical(B):
-        A,X1 = A.children[0], A.children[1]
-        B,X2 = B.children[0], B.children[1]
-        if X1 == X2 and isinstance(X1,DifferentialExpr):
-          C = A+B
-          if isinstance(C,ScalarMulExpr):
-            expr = C.children[0] * Tr(C.children[1] * X1)
-          else:
-            expr = Tr(C*X1)
-    #else:
-    #  expr = massage2canonical_stage2(left) + massage2canonical_stage2(right)
-  elif isinstance(expr, SubExpr):
-    left, right = expr.children[0], expr.children[1]
-    if isinstance(left,TraceExpr) and isinstance(right,TraceExpr):
-      # Tr(A) - Tr(B)
-      A,B = left.children[0], right.children[0]
-      if is_canonical(A) and is_canonical(B):
-        A,X1 = A.children[0], A.children[1]
-        B,X2 = B.children[0], B.children[1]
-        if X1 == X2 and isinstance(X1,DifferentialExpr):
-          C = A-B
-          if isinstance(C,ScalarMulExpr):
-            expr = C.children[0] * Tr(C.children[1] * X1)
-          else:
-            expr = Tr(C*X1)
-    #else:
-    #  expr = massage2canonical_stage2(left) - massage2canonical_stage2(right)
-
-  #print "{} -> {}".format(prev_expr,expr)
-
-  return expr
+#def massage2canonical_stage2(expr):
+#  expr = copy.deepcopy(expr)
+#  prev_expr = copy.deepcopy(expr)
+#
+#  if isinstance(expr, AddExpr):
+#    left, right = expr.children[0], expr.children[1]
+#    if isinstance(left,TraceExpr) and isinstance(right,TraceExpr):
+#      # Tr(A) + Tr(B)
+#      A,B = left.children[0], right.children[0]
+#      if is_canonical(A) and is_canonical(B):
+#        A,X1 = A.children[0], A.children[1]
+#        B,X2 = B.children[0], B.children[1]
+#        if X1 == X2 and isinstance(X1,DifferentialExpr):
+#          C = A+B
+#          if isinstance(C,ScalarMulExpr):
+#            expr = C.children[0] * Tr(C.children[1] * X1)
+#          else:
+#            expr = Tr(C*X1)
+#    #else:
+#    #  expr = massage2canonical_stage2(left) + massage2canonical_stage2(right)
+#  elif isinstance(expr, SubExpr):
+#    left, right = expr.children[0], expr.children[1]
+#    if isinstance(left,TraceExpr) and isinstance(right,TraceExpr):
+#      # Tr(A) - Tr(B)
+#      A,B = left.children[0], right.children[0]
+#      if is_canonical(A) and is_canonical(B):
+#        A,X1 = A.children[0], A.children[1]
+#        B,X2 = B.children[0], B.children[1]
+#        if X1 == X2 and isinstance(X1,DifferentialExpr):
+#          C = A-B
+#          if isinstance(C,ScalarMulExpr):
+#            expr = C.children[0] * Tr(C.children[1] * X1)
+#          else:
+#            expr = Tr(C*X1)
+#    #else:
+#    #  expr = massage2canonical_stage2(left) - massage2canonical_stage2(right)
+#
+#  #print "{} -> {}".format(prev_expr,expr)
+#
+#  return expr
 
 def is_canonical(expr):
   """

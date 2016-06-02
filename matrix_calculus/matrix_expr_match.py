@@ -97,7 +97,7 @@ def translate_case(expr,start_case,end_case):
   #print end_var_parent_dict
 
   if start_var_parent_dict.keys() != end_var_parent_dict.keys():
-    raise ValueError("Start case and end case must be contain the same variables.")
+    raise ValueError("Start case and end case must contain the same variables.")
 
   case_expr_matches = {}
   match_case(expr,start_case,case_expr_matches)
