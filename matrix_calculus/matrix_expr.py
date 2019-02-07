@@ -6,7 +6,6 @@ Matrix expression classes.
 """
 
 import copy
-from itertools import izip
 
 import numpy as np
 
@@ -36,6 +35,8 @@ class Expr(object):
     super(Expr,self).__init__()
     self.children = []
     self.precedence_level = precedence_level
+  def __hash__(self):
+    raise NotImplementedError()
   def from_string(self,s):
     pass
   def contains(self,expr_type):
@@ -131,6 +132,11 @@ class DifferentialExpr(Expr):
     super(DifferentialExpr,self).__init__(0)
     self.children = [expr]
     self.wrt = wrt
+  def __hash__(self):
+    h = hash(self.wrt)
+    for c in self.children:
+        h *= hash(c)
+    return h
   def eval(self,x,wrt,const_dict,is_grad=False):
     return 1.
   def __str__(self):
@@ -151,6 +157,8 @@ class Variable(Expr):
     if name in self.reserved_names:
       raise ValueError("Cannot create variable. \"{}\" is a reserved name.".format(name))
     self.name = name
+  def __hash__(self):
+    return hash(self.name)
   def eval(self,x,wrt,const_dict,is_grad=False):
     return x if wrt.name == self.name else const_dict[self.name]
   def __str__(self):
@@ -171,6 +179,8 @@ class ScalarVariable(Expr):
     if name in self.reserved_names:
       raise ValueError("Cannot create variable. \"{}\" is a reserved name.".format(name))
     self.name = name
+  def __hash__(self):
+    return hash(self.name)
   def eval(self,x,wrt,const_dict,is_grad=False):
     return x if wrt.name == self.name else const_dict[self.name]
   def __str__(self):
@@ -187,6 +197,8 @@ class Scalar(Expr):
   def __init__(self,value):
     super(Scalar,self).__init__(1)
     self.value = value
+  def __hash__(self):
+    return hash(self.value)
   def eval(self,x,wrt,const_dict,is_grad=False):
     return self.value
   def __str__(self):
@@ -202,6 +214,8 @@ class NullExpr(Expr):
     super(NullExpr,self).__init__(1)
   def eval(self,x,wrt,const_dict,is_grad=False):
     return 0.
+  def __hash__(self):
+    return hash('null')
   def __str__(self):
     return "0"
   def __eq__(self,other):
@@ -212,6 +226,11 @@ class AddExpr(Expr):
   def __init__(self,left,right):
     super(AddExpr,self).__init__(4)
     self.children = [left,right]
+  def __hash__(self):
+    h = hash('+')
+    for c in self.children:
+        h *= hash(c)
+    return h
   def eval(self,x,wrt,const_dict,is_grad=False):
     return self.children[0].eval(x,wrt,const_dict,is_grad) + self.children[1].eval(x,wrt,const_dict,is_grad)
   def __str__(self):
@@ -224,6 +243,11 @@ class SubExpr(Expr):
   def __init__(self,left,right):
     super(SubExpr,self).__init__(4)
     self.children = [left,right]
+  def __hash__(self):
+    h = hash('-')
+    for c in self.children:
+        h *= hash(c)
+    return h
   def eval(self,x,wrt,const_dict,is_grad=False):
     return self.children[0].eval(x,wrt,const_dict,is_grad) - self.children[1].eval(x,wrt,const_dict,is_grad)
   def __str__(self):
@@ -236,6 +260,11 @@ class ScalarMulExpr(Expr):
   def __init__(self,left,right):
     super(ScalarMulExpr,self).__init__(3)
     self.children = [left,right]
+  def __hash__(self):
+    h = hash('*')
+    for c in self.children:
+        h *= hash(c)
+    return h
   def eval(self,x,wrt,const_dict,is_grad=False):
     return np.dot(self.children[0].eval(x,wrt,const_dict,is_grad), self.children[1].eval(x,wrt,const_dict,is_grad))
   def __str__(self):
@@ -264,6 +293,11 @@ class MatMulExpr(Expr):
   def __init__(self,left,right):
     super(MatMulExpr,self).__init__(3)
     self.children = [left,right]
+  def __hash__(self):
+    h = hash('@')
+    for c in self.children:
+        h *= hash(c)
+    return h
   def eval(self,x,wrt,const_dict,is_grad=False):
     return np.dot(self.children[0].eval(x,wrt,const_dict,is_grad), self.children[1].eval(x,wrt,const_dict,is_grad))
   def __str__(self):
@@ -284,6 +318,11 @@ class TraceExpr(Expr):
   def __init__(self,expr):
     super(TraceExpr,self).__init__(0)
     self.children = [expr]
+  def __hash__(self):
+    h = hash('Tr')
+    for c in self.children:
+        h *= hash(c)
+    return h
   def eval(self,x,wrt,const_dict,is_grad=False):
     if is_grad:
         return self.children[0].eval(x,wrt,const_dict,is_grad)
@@ -300,6 +339,11 @@ class StarExpr(Expr): # Any operator that rearranges elements
     super(StarExpr,self).__init__(1)
     self.children = [expr]
     self.symbol = symbol
+  def __hash__(self):
+    h = hash('star')
+    for c in self.children:
+        h *= hash(c)
+    return h
   def eval(self,x,wrt,const_dict,is_grad):
     raise NotImplementedError
   def __str__(self):
@@ -313,6 +357,11 @@ class StarExpr(Expr): # Any operator that rearranges elements
 class TransposeExpr(StarExpr):
   def __init__(self,expr):
     super(TransposeExpr,self).__init__(expr,"'")
+  def __hash__(self):
+    h = hash('T')
+    for c in self.children:
+        h *= hash(c)
+    return h
   def eval(self,x,wrt,const_dict,is_grad):
     return np.transpose(self.children[0].eval(x,wrt,const_dict,is_grad))
 
@@ -340,7 +389,7 @@ def print_structure(expr):
       indent_str += "-"*(indent-2)
     else:
       indent_str = ""
-    print "{}{} = {}".format(indent_str,e.__class__.__name__,e)
+    print("{}{} = {}".format(indent_str,e.__class__.__name__,e))
 
     [qs.append((level+1,dict(pipe_dict.items() + {level: "|" if num_children-1-ci < num_children-1 else end_tree_chr}.items()),c)) for ci,c in enumerate(e.children[::-1])]
 

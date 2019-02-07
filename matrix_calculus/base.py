@@ -31,7 +31,7 @@ Source: T.P. Minka, "Old and New Matrix Algebra Useful for Statistics", 2000.
 """
 
 import copy
-from matrix_expr import *
+from matrix_calculus.matrix_expr import *
 
 def d(expr,wrt,hessian=False):
   """
@@ -84,7 +84,7 @@ def d(expr,wrt,hessian=False):
       expr = NullExpr()
   else:
     expr = DifferentialExpr(expr,wrt) # In this case, we do not know how to go further
-    print "Warning: Don't know how to process {}".format(expr)
+    print("Warning: Don't know how to process {}".format(expr))
 
   #print "d{} -> {}".format(prev_expr,expr)
 

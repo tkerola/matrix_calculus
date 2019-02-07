@@ -6,8 +6,8 @@
 
 import copy
 import functools
-from matrix_expr import *
-from matrix_expr_match import match_deepest, translate_case
+from matrix_calculus.matrix_expr import *
+from matrix_calculus.matrix_expr_match import match_deepest, translate_case
 
 CANONICAL_VERBOSE = True
 
@@ -80,8 +80,8 @@ def massage2canonical_stage1(expr,cases,levels):
     new_expr_copy = copy.deepcopy(expr)
     #print "Matches:,matches
     if CANONICAL_VERBOSE:
-        print "[{}] Applying {} -> {}".format(".".join(map(str,levels)),best_case,cases[best_case])
-        print "[{}] :: {} -> {}".format(".".join(map(str,levels)),prev_expr,new_expr_copy)
+        print("[{}] Applying {} -> {}".format(".".join(map(str,levels)),best_case,cases[best_case]))
+        print("[{}] :: {} -> {}".format(".".join(map(str,levels)),prev_expr,new_expr_copy))
 
     expr.children = [massage2canonical_stage1(child,cases,levels+[1]) for child_index,child in enumerate(expr.children)]
     levels[-1] += 1

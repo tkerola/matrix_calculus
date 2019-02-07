@@ -3,7 +3,8 @@ Utilty functions for matching matrix expressions with gradient rules.
 """
 
 from collections import defaultdict
-from matrix_expr import *
+from matrix_calculus.matrix_expr import *
+
 
 def peel(expr):
   return expr.children
@@ -104,7 +105,7 @@ def translate_case(expr,start_case,end_case):
   #print start_case,"->",end_case
   #print case_expr_matches
 
-  for varname in end_var_parent_dict.iterkeys():
+  for varname in end_var_parent_dict.keys():
     for (child_index,parent) in end_var_parent_dict[varname]:
       subexpr = case_expr_matches[varname]
       if isinstance(parent,TransposeExpr) and isinstance(subexpr,TransposeExpr):

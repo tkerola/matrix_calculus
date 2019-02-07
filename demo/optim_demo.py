@@ -33,16 +33,16 @@ def main():
     expr = 0.5*Tr((vY-vD*vX).T*(vY-vD*vX))
     wrt = vX
     dX = d(expr,wrt)
-    print "Jacobian:"
-    print dX
+    print("Jacobian:")
+    print(dX)
 
     # The derivative is 0.5Tr((Dd(X))'(Y-DX)+(Y-DX)'Dd(X)),
     # which is correct, but we need the canonical form
     # of the derivative in order to to gradient descent.
     # We can get this form by using massage2canonical.
     dX = massage2canonical(dX,verbose=False)
-    print "Jacobian (canonical):"
-    print dX
+    print("Jacobian (canonical):")
+    print(dX)
 
     # The (canonical) derivative is 0.5Tr(((D'(Y-DX))'+(Y-DX)'D)d(X)).
     # We can solve this using L-BFGS
@@ -58,14 +58,14 @@ def main():
     const_dict = {'Y':Y,'D':D}
     f = expr2func(expr,wrt,const_dict,wrt_shape=(p,n))
     fp = expr2func(dX,wrt,const_dict,wrt_shape=(p,n),res_shape=(-1),is_grad=True)
-    print np.linalg.norm(f(X0) - f_true(X0))
-    print np.linalg.norm(fp(X0) - fp_true(X0))
+    print(np.linalg.norm(f(X0) - f_true(X0)))
+    print(np.linalg.norm(fp(X0) - fp_true(X0)))
 
     x,min_val,d = fmin_l_bfgs_b(f,X0,fp)
     X = x.reshape((p,n))
     for k in ['warnflag','funcalls','nit','grad']:
-        print "{}: {}".format(k,d[k])
-    print "x: {}".format(x)
+        print("{}: {}".format(k,d[k]))
+    print("x: {}".format(x))
 
 if __name__ == "__main__":
     main()
