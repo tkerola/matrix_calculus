@@ -28,7 +28,7 @@ class Expr(object):
 
               Precedence level  Operator
               0                 DifferentialExpr,TraceExpr
-              1                 Variable, Scalar, NullExpr, StarExpr, TransposeExpr
+              1                 Variable, Scalar, NullExpr, StarExpr, TransposeExpr, InverseExpr
               2                 unary plus and minus
               3                 MatMulExpr
               4                 AddExpr, SubExpr
@@ -102,10 +102,18 @@ class Expr(object):
             return SubExpr(self, other)
 
     def __mul__(self, other):
+        if not isinstance(other, Expr):
+            other = Scalar(other)
         if type(self) == NullExpr or type(other) == NullExpr:
             return NullExpr()
         elif type(self) == Scalar and type(other) == Scalar:
             return Scalar(self.value*other.value)
+        elif type(self) == ScalarMulExpr and type(other) == ScalarMulExpr:
+            return ScalarMulExpr(self.children[0]*other.children[0], self.children[1]*other.children[1])
+        elif type(self) == ScalarMulExpr and type(other) == Scalar:
+            return ScalarMulExpr(self.children[0]*other.value, self.children[1])
+        elif type(self) == Scalar and type(other) == ScalarMulExpr:
+            return ScalarMulExpr(self.value*other.children[0], other.children[1])
         elif type(self) == Scalar:
             return ScalarMulExpr(self, other)
         elif type(other) == Scalar:
@@ -116,8 +124,6 @@ class Expr(object):
             return ScalarMulExpr(self.children[0], self.children[1]*other)
         elif type(other) == ScalarMulExpr:
             return ScalarMulExpr(other.children[0], self*other.children[1])
-        elif type(self) == ScalarMulExpr and type(other) == ScalarMulExpr:
-            return ScalarMulExpr(self.children[0]*other.children[0], self.children[1]*other.children[1])
         else:
             return MatMulExpr(self, other)
 
@@ -142,12 +148,14 @@ class Expr(object):
         raise NotImplementedError
 
     def __neg__(self):
-        raise NotImplementedError
+        return ScalarMulExpr(Scalar(-1), self)
 
     def __pos__(self):
         return self
     T = property(lambda self: self.children[0] if isinstance(
         self, TransposeExpr) else TransposeExpr(self))
+    I = property(lambda self: self.children[0] if isinstance(
+        self, InverseExpr) else InverseExpr(self))
 
 
 class DifferentialExpr(Expr):
@@ -429,6 +437,34 @@ class StarExpr(Expr):  # Any operator that rearranges elements
     def toLatex(self):
         brackets = self.precedence_level < self.children[0].precedence_level
         return r"{{{}{}{}}}{}".format("(" if brackets else "", self.children[0].toLatex(), ")" if brackets else "", self.symbol)
+
+
+class InverseExpr(Expr):
+    def __init__(self, expr):
+        super(InverseExpr, self).__init__(1)
+        self.children = [expr]
+
+    def __hash__(self):
+        h = hash('inverse')
+        for c in self.children:
+            h *= hash(c)
+        return h
+
+    def eval(self, x, wrt, const_dict, is_grad):
+        cval = self.children[0].eval(x, wrt, const_dict, is_grad)
+        if np.isscalar(cval):
+            return np.reciprocal(cval)
+        if isinstance(cval, np.ndarray):
+            return np.linalg.inv(cval)
+        raise NotImplementedError
+
+    def __str__(self):
+        brackets = self.precedence_level < self.children[0].precedence_level
+        return "{}{}{}{}".format("(" if brackets else "", self.children[0], ")" if brackets else "", '^(-1)')
+
+    def toLatex(self):
+        brackets = self.precedence_level < self.children[0].precedence_level
+        return r"{{{}{}{}}}^{{{}}}".format("(" if brackets else "", self.children[0].toLatex(), ")" if brackets else "", -1)
 
 
 class TransposeExpr(StarExpr):

@@ -77,6 +77,10 @@ def d(expr, wrt, hessian=False):
         # d(XY) = (dX)Y + XdY
         expr = d(expr.children[0], wrt)*expr.children[1] + \
             expr.children[0]*d(expr.children[1], wrt)
+    elif isinstance(expr, InverseExpr):
+        # d(X.I) = -X.I(dX)X.I
+        expr = -InverseExpr(expr.children[0]) * d(expr.children[0], wrt) * \
+                InverseExpr(expr.children[0])
     elif isinstance(expr, StarExpr):
         # dX* = (dX)*
         expr = copy.copy(expr)

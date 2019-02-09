@@ -1,6 +1,7 @@
 """
 Utilty functions for matching matrix expressions with gradient rules.
 """
+import itertools
 
 from collections import defaultdict
 from matrix_calculus.matrix_expr import *
@@ -43,6 +44,8 @@ def match_case(expr, case, d):
                         case.name, d[case.name], expr))
             else:
                 d[case.name] = expr
+        else:
+            raise MatchError("No match at scalar case.")
     elif type(case) == DifferentialExpr:
         if expr.contains(DifferentialExpr):
             # Throw away the DifferentialExpr in the case
@@ -70,15 +73,6 @@ def match_case(expr, case, d):
                         raise MatchError(
                             "Vars in subexpressions matches to different expressions.")
             d.update(dsub)
-        #ok = True
-        # for i in range(len(dsubs)):
-        #  for j in range(i+1,len(dsubs)):
-        #    if set(dsubs[i].keys()) == set(dsubs[j].keys()):
-        #      if set(dsubs[i].values()) != set(dsubs[j].values()):
-        #        ok = False
-        # if ok:
-        #  for dsub in dsubs:
-        #    d.update(dsub)
 
 
 def translate_case(expr, start_case, end_case):

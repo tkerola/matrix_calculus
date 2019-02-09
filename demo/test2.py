@@ -13,7 +13,7 @@ def main():
     v = W.T * u
 
     expr = Tr(u.T * u * (v.T * v).I)
-    wrt = X
+    wrt = W
     print("Jacobian")
     dX = show_derivation(expr, wrt)
     show_latex(dX, expr, wrt)
